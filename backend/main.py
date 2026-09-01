@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+from datetime import datetime
 #import tables from connection.py
 
 from connection import users, subjects, quizzes, engine
@@ -21,6 +22,15 @@ class SubjectCreate(BaseModel):
     topic: str
     sub_topic: str 
     short_description: str
+
+class QuizCreate(BaseModel):
+    user_id: int
+    subject_id: int
+    date: datetime 
+    proficiency: str
+    question: str 
+    answer: str
+
 
 def get_db():
     db = SessionLocal()
