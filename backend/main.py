@@ -41,15 +41,18 @@ def get_db():
 
 
 @app.post("/users/")
-async def receive_data(data: UserCreate, db: Session = Depends(get_db)):
+async def receive_users(data: UserCreate, db: Session = Depends(get_db)):
     
-    new_user = users.insert().values(user_name=data.user_name, email=data.email)
+    new_user = users.insert().values(
+    user_name=data.user_name, 
+    email=data.email
+    )
     db.execute(new_user)
     db.commit()
     
     return {
         "status": "success",
-        "received_data": data,
+        "received_users": data,
     }
 
 @app.get("/users/")
@@ -67,7 +70,7 @@ async def get_users(db: Session = Depends(get_db)):
     }
 
 @app.post("/subjects/")
-async def receive_data(data: SubjectCreate, db: Session = Depends(get_db)):
+async def receive_subjects(data: SubjectCreate, db: Session = Depends(get_db)):
     new_subject = subjects.insert().values(
         user_id=data.user_id,
         topic=data.topic,
@@ -79,7 +82,7 @@ async def receive_data(data: SubjectCreate, db: Session = Depends(get_db)):
 
     return {
         "status": "success",
-        "received_data": data,
+        "received_subjects": data,
     }
 
 @app.get("/subjects/")
@@ -94,8 +97,40 @@ async def get_subjects(db: Session = Depends(get_db)):
     return {
         "status": "success",
         "subjects_list": rows_list
+    } 
+
+
+@app.post("/quizzes/")
+async def receive_quizzes(data: QuizCreate, db: Session = Depends(get_db)):
+    new_quiz = quizzes.insert().values(
+        user_id=data.user_id,
+        subject_id=data.subject_id,
+        date=data.date,
+        proficiency=data.proficiency,
+        question=data.question,
+        answer=data.answer
+    )
+    db.execute(new_quiz)
+    db.commit()
+
+    return {
+        "status": "success",
+        "received_quizzes": data,
     }
 
+@app.get("/quizzes/")
+async def get_quizzes(db: Session = Depends(get_db)):
+    quizzes_list = quizzes.select()
+    quizzes_list = db.execute(quizzes_list)
+
+    rows = quizzes_list.fetchall()
+
+    rows_list = [row._asdict() for row in rows]
+
+    return {
+        "status": "success",
+        "quizzes_list": rows_list
+    }
     
     
     
