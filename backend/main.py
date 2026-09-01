@@ -16,6 +16,12 @@ class UserCreate(BaseModel):
     user_name: str
     email:str
 
+class SubjectCreate(BaseModel):
+    user_id: int
+    topic: str
+    sub_topic: str 
+    short_description: str
+
 def get_db():
     db = SessionLocal()
     try:
@@ -49,6 +55,37 @@ async def get_users(db: Session = Depends(get_db)):
         "status": "success",
         "users_list": rows_list
     }
+
+@app.post("/subjects/")
+async def receive_data(data: SubjectCreate, db: Session = Depends(get_db)):
+    new_subject = subjects.insert().values(
+        user_id=data.user_id,
+        topic=data.topic,
+        sub_topic=data.sub_topic,
+        short_description=data.short_description
+    )
+    db.execute(new_subject)
+    db.commit()
+
+    return {
+        "status": "success",
+        "received_data": data,
+    }
+
+@app.get("/subjects/")
+async def get_subjects(db: Session = Depends(get_db)):
+    subjects_list = subjects.select()
+    subjects_list = db.execute(subjects_list)
+
+    rows = subjects_list.fetchall()
+
+    rows_list = [row._asdict() for row in rows]
+
+    return {
+        "status": "success",
+        "subjects_list": rows_list
+    }
+
     
     
     
