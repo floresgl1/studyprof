@@ -36,7 +36,19 @@ async def receive_data(data: UserCreate, db: Session = Depends(get_db)):
         "received_data": data,
     }
 
+@app.get("/users/")
+async def get_users(db: Session = Depends(get_db)):
+    users_list = users.select()
+    users_list = db.execute(users_list)
 
+    rows = users_list.fetchall()
+
+    rows_list = [row._asdict() for row in rows]
+
+    return {
+        "status": "success",
+        "users_list": rows_list
+    }
     
     
     
