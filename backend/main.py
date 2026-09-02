@@ -1,7 +1,8 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, UploadFile, File
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from datetime import datetime
+import fitz
 #import tables from connection.py
 
 from connection import users, subjects, quizzes, engine
@@ -38,6 +39,16 @@ def get_db():
         yield db
     finally:
         db.close()
+
+def extract_text(file_bytes):
+
+    doc = fitz.open(stream=file_bytes, filetype="pdf")
+    text = ""
+    for page in doc:
+        text += (page.get_text())
+
+    doc.close()
+    return text 
 
 
 @app.post("/users/")
@@ -132,5 +143,15 @@ async def get_quizzes(db: Session = Depends(get_db)):
         "quizzes_list": rows_list
     }
     
+
+@app.post("/upload/")
+async def upload_file(file: UploadFile = File(...)):
+    content = await file.read()
+
+    content = extract_text(content)
+    return {
+        "filename": file.filename,
+        "content": content
+    }
     
     
