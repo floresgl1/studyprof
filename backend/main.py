@@ -3,8 +3,13 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from datetime import datetime
 import fitz
-#import tables from connection.py
+import os 
+from openai import OpenAI
 
+client = OpenAI(
+    base_url="https://api.tokenfactory.nebius.com/v1/",
+    api_key=os.getenv("NEBIUS_API_KEY"),
+)
 from connection import users, subjects, quizzes, engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import insert
@@ -49,6 +54,18 @@ def extract_text(file_bytes):
 
     doc.close()
     return text 
+
+def generate_question(text):
+    # define Nebius API structure and generate system prompt
+    response = client.chat.completions.create(
+        model="Nemotron-3.5-Lightning",
+        messages=[
+            {"role": "system", "content": "You are an expert educator and quiz designer. Your task is to generate high-quality, accurate quizzes with clear answers based on the provided topic, text, or source material.\n\nFollow these strict rules:\n1. Role & Tone: Maintain a neutral, professional, and clear academic tone. Avoid ambiguous or trick questions.\n2. Structure: Return the response in a json format with fields, proficiency, question, answer. \n3. Formats: \n   - Provide a mix of multiple-choice questions (MCQs), true/false, or short answer as requested.\n   - For MCQs, provide exactly four options labeled A, B, C, and D, with only one correct choice and three plausible distractors.\n4. Example output:[{"proficiency": "...", "question": "...", "answer": "..."}]"},
+            {"role": "user", "content": text},
+        ]
+    )
+    return response.choices[0].message.content
+
 
 
 @app.post("/users/")
